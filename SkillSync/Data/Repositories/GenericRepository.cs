@@ -16,7 +16,6 @@ namespace SkillSync.Data.Repositories
 
         public async Task<List<T>> GetAllAsync()
         {
-            // AsNoTracking to improve performance in readings (no need to track changes)
             return await _dbSet.AsNoTracking().ToListAsync();
         }
 
@@ -29,7 +28,6 @@ namespace SkillSync.Data.Repositories
 
         public async Task<T?> GetByIdAsync(int id)
         {
-            // It depends on the Entity having a PK named "Id" of type int
             return await _dbSet.FindAsync(id);
         }
 

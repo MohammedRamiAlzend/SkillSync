@@ -48,11 +48,6 @@ namespace SkillSync.Data
                 .WithMany(d => d.Attachments)
                 .HasForeignKey(a => a.DesignId);
 
-            // Attachment — User (N:1)
-            modelBuilder.Entity<Attachment>()
-                .HasOne(a => a.OwnerUser)
-                .WithMany(u => u.Attachments)
-                .HasForeignKey(a => a.OwnerUserId);
         }
 
     }

@@ -13,7 +13,6 @@
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
         public ICollection<Design> Designs { get; set; } = new List<Design>();
-        public ICollection<Attachment> Attachments { get; set; } = new List<Attachment>();
     }
 }
 

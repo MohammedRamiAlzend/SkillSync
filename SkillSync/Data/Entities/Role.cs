@@ -2,10 +2,8 @@
 {
     public class Role
     {
-        public int Id { get; set; }          // PK Id
-        public string Name { get; set; } = null!; // Role name: Admin, Participant, ...
-
-        // Navigation
+        public int Id { get; set; }        
+        public string Name { get; set; } = null!; 
         public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
    
     }
