@@ -12,5 +12,6 @@
         public List<string> Roles { get; set; } = new();
 
         public string? AvatarPath { get; set; }
+
     }
 }

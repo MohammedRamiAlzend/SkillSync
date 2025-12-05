@@ -106,7 +106,7 @@ namespace SkillSync.Controllers
                 return NotFound("User not found");
             var avatar = await _context.Attachments
             .FirstOrDefaultAsync(a =>
-                a.OwnerUserId == user.Id &&
+               // a.OwnerUserId == user.Id &&
                 a.IsPrimary &&
                 a.IsActive);
 

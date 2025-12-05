@@ -8,7 +8,6 @@ namespace SkillSync.Controllers
     public class TestController : ControllerBase
     {
         private readonly AppDbContext _db;
-
         public TestController(AppDbContext db)
         {
             _db = db;

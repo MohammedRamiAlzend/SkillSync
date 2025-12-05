@@ -17,5 +17,6 @@
         public bool IsDeleted { get; set; } = false;
 
         public ICollection<Attachment> Attachments { get; set; } = new List<Attachment>();
+
     }
 }

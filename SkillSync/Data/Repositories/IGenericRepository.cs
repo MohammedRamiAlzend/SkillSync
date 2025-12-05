@@ -19,5 +19,6 @@ namespace SkillSync.Data.Repositories
         void Remove(T entity);
 
         Task<int> SaveChangesAsync();
+
     }
 }

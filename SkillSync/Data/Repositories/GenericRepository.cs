@@ -8,6 +8,7 @@ namespace SkillSync.Data.Repositories
         private readonly AppDbContext _context;
         private readonly DbSet<T> _dbSet;
 
+
         public GenericRepository(AppDbContext context)
         {
             _context = context;

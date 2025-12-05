@@ -18,5 +18,6 @@ namespace SkillSync.Data
         public DbSet<Design> Designs => Set<Design>();
         public DbSet<Attachment> Attachments => Set<Attachment>();
 
+
     }
 }
