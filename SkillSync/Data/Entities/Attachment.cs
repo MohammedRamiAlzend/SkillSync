@@ -7,9 +7,6 @@
         public int? DesignId { get; set; }
         public Design? Design { get; set; }
 
-        public int OwnerUserId { get; set; }
-        public User OwnerUser { get; set; } = null!;
-
         public string FileName { get; set; } = null!;
         public string MimeType { get; set; } = null!;
         public long FileSizeBytes { get; set; }
