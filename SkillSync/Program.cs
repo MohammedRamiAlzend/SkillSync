@@ -39,7 +39,7 @@ builder.Services.AddAuthentication(options =>
     {
         ValidateIssuer = true,
         ValidateAudience = true,
-        ValidateLifetime = true,
+        ValidateLifetime = false,
         ValidateIssuerSigningKey = true,
         ValidIssuer = builder.Configuration["Jwt:Issuer"] ?? "SkillSync",
         ValidAudience = builder.Configuration["Jwt:Audience"] ?? "SkillSyncUsers",
@@ -67,6 +67,50 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddAuthorization();
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+    // Ensure database is created
+    dbContext.Database.EnsureCreated();
+
+    // Add roles if they don't exist
+    if (!dbContext.Roles.Any())
+    {
+        dbContext.Roles.AddRange(
+            new SkillSync.Data.Entities.Role { Name = "Admin" },
+            new SkillSync.Data.Entities.Role { Name = "User" },
+            new SkillSync.Data.Entities.Role { Name = "Designer" }
+        );
+        dbContext.SaveChanges();
+    }
+
+    if (!dbContext.Users.Any())
+    {
+        var testUser = new SkillSync.Data.Entities.User
+        {
+            UserName = "test",
+            Email = "test@example.com",
+            PasswordHash = "123", 
+            IsActive = true
+        };
+
+        dbContext.Users.Add(testUser);
+        dbContext.SaveChanges();
+
+        var userRole = new SkillSync.Data.Entities.UserRole
+        {
+            UserId = testUser.Id,
+            RoleId = dbContext.Roles.First(r => r.Name == "User").Id
+        };
+
+        dbContext.UserRoles.Add(userRole);
+        dbContext.SaveChanges();
+
+        Console.WriteLine("Database seeded with test user: test / 123");
+    }
+}
 
 if (app.Environment.IsDevelopment())
 {

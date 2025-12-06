@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using SkillSync.Data.Entities;
+using System.Linq.Expressions;
 
 namespace SkillSync.Data.Repositories
 {
@@ -8,11 +9,54 @@ namespace SkillSync.Data.Repositories
         private readonly AppDbContext _context;
         private readonly DbSet<T> _dbSet;
 
-
         public GenericRepository(AppDbContext context)
         {
             _context = context;
             _dbSet = _context.Set<T>();
+        }
+
+        public IQueryable<T> GetAll()
+        {
+            return _dbSet.AsQueryable();
+        }
+
+        public IQueryable<T> GetAllIncluding(params Expression<Func<T, object>>[] includeProperties)
+        {
+            IQueryable<T> query = _dbSet;
+
+            foreach (var includeProperty in includeProperties)
+            {
+                query = query.Include(includeProperty);
+            }
+
+            return query;
+        }
+
+        public async Task<T?> GetByIdIncludingAsync(int id, params Expression<Func<T, object>>[] includeProperties)
+        {
+            IQueryable<T> query = _dbSet;
+
+            foreach (var includeProperty in includeProperties)
+            {
+                query = query.Include(includeProperty);
+            }
+
+            var entity = await query.FirstOrDefaultAsync(e => EF.Property<int>(e, "Id") == id);
+            return entity;
+        }
+
+        public async Task<T?> GetFirstIncludingAsync(
+            Expression<Func<T, bool>> predicate,
+            params Expression<Func<T, object>>[] includeProperties)
+        {
+            IQueryable<T> query = _dbSet;
+
+            foreach (var includeProperty in includeProperties)
+            {
+                query = query.Include(includeProperty);
+            }
+
+            return await query.FirstOrDefaultAsync(predicate);
         }
 
         public async Task<List<T>> GetAllAsync()
@@ -20,7 +64,7 @@ namespace SkillSync.Data.Repositories
             return await _dbSet.AsNoTracking().ToListAsync();
         }
 
-        public async Task<List<T>> FindAsync(System.Linq.Expressions.Expression<Func<T, bool>> predicate)
+        public async Task<List<T>> FindAsync(Expression<Func<T, bool>> predicate)
         {
             return await _dbSet.AsNoTracking()
                                .Where(predicate)
