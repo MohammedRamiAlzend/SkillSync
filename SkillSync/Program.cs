@@ -2,6 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using SkillSync.Data.Repositories;
 using Scalar.AspNetCore;
 using SkillSync.Data;
+using SkillSync.Services;
+using SkillSync.services;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -14,7 +16,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 
 // Add services to the container.
-
+builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();

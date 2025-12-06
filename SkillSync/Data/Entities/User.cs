@@ -11,7 +11,7 @@
         public bool EmailConfirmed { get; set; } = false;
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-        public ICollection<Role> UserRoles { get; set; } = new List<Role>();
+        public ICollection<Role> Roles { get; set; } = new List<Role>();
         public ICollection<Design> Designs { get; set; } = new List<Design>();
 
     }

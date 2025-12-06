@@ -17,6 +17,21 @@ namespace SkillSync.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.0");
 
+            modelBuilder.Entity("RoleUser", b =>
+                {
+                    b.Property<int>("RolesId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("UsersId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("RolesId", "UsersId");
+
+                    b.HasIndex("UsersId");
+
+                    b.ToTable("RoleUser");
+                });
+
             modelBuilder.Entity("SkillSync.Data.Entities.Attachment", b =>
                 {
                     b.Property<int>("Id")
@@ -46,9 +61,6 @@ namespace SkillSync.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("OwnerUserId")
-                        .HasColumnType("INTEGER");
-
                     b.Property<string>("RelativePath")
                         .HasColumnType("TEXT");
 
@@ -59,8 +71,6 @@ namespace SkillSync.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("DesignId");
-
-                    b.HasIndex("OwnerUserId");
 
                     b.ToTable("Attachments");
                 });
@@ -147,19 +157,19 @@ namespace SkillSync.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("SkillSync.Data.Entities.UserRole", b =>
+            modelBuilder.Entity("RoleUser", b =>
                 {
-                    b.Property<int>("UserId")
-                        .HasColumnType("INTEGER");
+                    b.HasOne("SkillSync.Data.Entities.Role", null)
+                        .WithMany()
+                        .HasForeignKey("RolesId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
-                    b.Property<int>("RoleId")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("UserId", "RoleId");
-
-                    b.HasIndex("RoleId");
-
-                    b.ToTable("UserRoles");
+                    b.HasOne("SkillSync.Data.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("UsersId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("SkillSync.Data.Entities.Attachment", b =>
@@ -168,15 +178,7 @@ namespace SkillSync.Migrations
                         .WithMany("Attachments")
                         .HasForeignKey("DesignId");
 
-                    b.HasOne("SkillSync.Data.Entities.User", "OwnerUser")
-                        .WithMany("Attachments")
-                        .HasForeignKey("OwnerUserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.Navigation("Design");
-
-                    b.Navigation("OwnerUser");
                 });
 
             modelBuilder.Entity("SkillSync.Data.Entities.Design", b =>
@@ -190,42 +192,14 @@ namespace SkillSync.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("SkillSync.Data.Entities.UserRole", b =>
-                {
-                    b.HasOne("SkillSync.Data.Entities.Role", "Role")
-                        .WithMany("UserRoles")
-                        .HasForeignKey("RoleId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("SkillSync.Data.Entities.User", "User")
-                        .WithMany("UserRoles")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Role");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("SkillSync.Data.Entities.Design", b =>
                 {
                     b.Navigation("Attachments");
                 });
 
-            modelBuilder.Entity("SkillSync.Data.Entities.Role", b =>
-                {
-                    b.Navigation("UserRoles");
-                });
-
             modelBuilder.Entity("SkillSync.Data.Entities.User", b =>
                 {
-                    b.Navigation("Attachments");
-
                     b.Navigation("Designs");
-
-                    b.Navigation("UserRoles");
                 });
 #pragma warning restore 612, 618
         }

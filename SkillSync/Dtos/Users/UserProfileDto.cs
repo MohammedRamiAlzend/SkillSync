@@ -11,7 +11,5 @@
         public int DesignsCount { get; set; }
         public List<string> Roles { get; set; } = new();
 
-        public string? AvatarPath { get; set; }
-
     }
 }
