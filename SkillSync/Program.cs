@@ -1,12 +1,12 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
-using SkillSync.Services; 
-
 using Microsoft.EntityFrameworkCore;
-using SkillSync.Data.Repositories;
+using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
 using SkillSync.Data;
+using SkillSync.Data.Entities;
+using SkillSync.Data.Repositories;
+using SkillSync.Services; 
+using System.Text;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -25,6 +25,7 @@ builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IGenericRepository<User>, GenericRepository<User>>();
 
 builder.Services.AddAuthentication(options =>
 {

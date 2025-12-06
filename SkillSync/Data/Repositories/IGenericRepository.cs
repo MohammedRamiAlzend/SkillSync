@@ -1,4 +1,5 @@
-﻿using System.Linq.Expressions;
+﻿using Microsoft.EntityFrameworkCore.Query;
+using System.Linq.Expressions;
 
 namespace SkillSync.Data.Repositories
 {
@@ -10,10 +11,8 @@ namespace SkillSync.Data.Repositories
         Task<List<T>> FindAsync(Expression<Func<T, bool>> predicate);
 
         Task<T?> GetByIdAsync(int id);
-
-        IQueryable<T> GetAllIncluding(params Expression<Func<T, object>>[] includeProperties);
-
-        Task<T?> GetByIdIncludingAsync(int id, params Expression<Func<T, object>>[] includeProperties);
+        IIncludableQueryable<T, TProperty> Include<TProperty>(
+                    Expression<Func<T, TProperty>> includeExpression);
 
         Task AddAsync(T entity);
 
@@ -25,9 +24,6 @@ namespace SkillSync.Data.Repositories
 
         Task<int> SaveChangesAsync();
 
-        Task<T?> GetFirstIncludingAsync(
-            Expression<Func<T, bool>> predicate,
-            params Expression<Func<T, object>>[] includeProperties);
 
     }
 }
