@@ -11,7 +11,7 @@ using SkillSync.Data;
 namespace SkillSync.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251206125852_InitialCreate")]
+    [Migration("20251206172212_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />

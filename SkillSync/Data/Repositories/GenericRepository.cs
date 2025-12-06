@@ -1,13 +1,14 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Query;
 using SkillSync.Data.Entities;
+using System.Linq.Expressions;
 
 namespace SkillSync.Data.Repositories
 {
     public class GenericRepository<T> : IGenericRepository<T> where T : class
     {
         private readonly AppDbContext _context;
-        private readonly DbSet<T> _dbSet;
-
+        protected readonly DbSet<T> _dbSet;
 
         public GenericRepository(AppDbContext context)
         {
@@ -15,12 +16,33 @@ namespace SkillSync.Data.Repositories
             _dbSet = _context.Set<T>();
         }
 
+
+        public IIncludableQueryable<T, TProperty> Include<TProperty>(
+            Expression<Func<T, TProperty>> includeExpression)
+        {
+            return _dbSet.Include(includeExpression);
+        }
+
+        public IIncludableQueryable<T, TProperty> ThenInclude<TPreviousProperty, TProperty>(
+            IIncludableQueryable<T, IEnumerable<TPreviousProperty>> source,
+            Expression<Func<TPreviousProperty, TProperty>> navigationPropertyPath)
+        {
+            return source.ThenInclude(navigationPropertyPath);
+        }
+
+        public IQueryable<T> GetAll()
+        {
+            return _dbSet.AsQueryable();
+        }
+
+
+
         public async Task<List<T>> GetAllAsync()
         {
             return await _dbSet.AsNoTracking().ToListAsync();
         }
 
-        public async Task<List<T>> FindAsync(System.Linq.Expressions.Expression<Func<T, bool>> predicate)
+        public async Task<List<T>> FindAsync(Expression<Func<T, bool>> predicate)
         {
             return await _dbSet.AsNoTracking()
                                .Where(predicate)
