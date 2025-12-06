@@ -24,9 +24,8 @@ namespace SkillSync.Services
         public async Task<AuthorizeResponse?> Login(string userName, string password)
         {
             var user = await _userRepository.GetAll()
-                .Include(u => u.UserRoles)
-                .ThenInclude(ur => ur.Role)
-                .FirstOrDefaultAsync(u => u.UserName == userName);
+       .Include(u => u.Roles)
+       .FirstOrDefaultAsync(u => u.UserName == userName);
 
             if (user == null)
                 return null;
@@ -34,7 +33,7 @@ namespace SkillSync.Services
             if (user.PasswordHash != password)
                 return null;
 
-            var roles = user.UserRoles.Select(ur => ur.Role.Name).ToList();
+            var roles = user.Roles.Select(r => r.Name).ToList();
 
             if (!roles.Any())
             {

@@ -68,24 +68,24 @@ namespace SkillSync.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "UserRoles",
+                name: "RoleUser",
                 columns: table => new
                 {
-                    UserId = table.Column<int>(type: "INTEGER", nullable: false),
-                    RoleId = table.Column<int>(type: "INTEGER", nullable: false)
+                    RolesId = table.Column<int>(type: "INTEGER", nullable: false),
+                    UsersId = table.Column<int>(type: "INTEGER", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_UserRoles", x => new { x.UserId, x.RoleId });
+                    table.PrimaryKey("PK_RoleUser", x => new { x.RolesId, x.UsersId });
                     table.ForeignKey(
-                        name: "FK_UserRoles_Roles_RoleId",
-                        column: x => x.RoleId,
+                        name: "FK_RoleUser_Roles_RolesId",
+                        column: x => x.RolesId,
                         principalTable: "Roles",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_UserRoles_Users_UserId",
-                        column: x => x.UserId,
+                        name: "FK_RoleUser_Users_UsersId",
+                        column: x => x.UsersId,
                         principalTable: "Users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
@@ -98,7 +98,6 @@ namespace SkillSync.Migrations
                     Id = table.Column<int>(type: "INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
                     DesignId = table.Column<int>(type: "INTEGER", nullable: true),
-                    OwnerUserId = table.Column<int>(type: "INTEGER", nullable: false),
                     FileName = table.Column<string>(type: "TEXT", nullable: false),
                     MimeType = table.Column<string>(type: "TEXT", nullable: false),
                     FileSizeBytes = table.Column<long>(type: "INTEGER", nullable: false),
@@ -116,12 +115,6 @@ namespace SkillSync.Migrations
                         column: x => x.DesignId,
                         principalTable: "Designs",
                         principalColumn: "Id");
-                    table.ForeignKey(
-                        name: "FK_Attachments_Users_OwnerUserId",
-                        column: x => x.OwnerUserId,
-                        principalTable: "Users",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateIndex(
@@ -130,19 +123,14 @@ namespace SkillSync.Migrations
                 column: "DesignId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Attachments_OwnerUserId",
-                table: "Attachments",
-                column: "OwnerUserId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Designs_UserId",
                 table: "Designs",
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_UserRoles_RoleId",
-                table: "UserRoles",
-                column: "RoleId");
+                name: "IX_RoleUser_UsersId",
+                table: "RoleUser",
+                column: "UsersId");
         }
 
         /// <inheritdoc />
@@ -152,7 +140,7 @@ namespace SkillSync.Migrations
                 name: "Attachments");
 
             migrationBuilder.DropTable(
-                name: "UserRoles");
+                name: "RoleUser");
 
             migrationBuilder.DropTable(
                 name: "Designs");

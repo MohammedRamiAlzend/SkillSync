@@ -7,6 +7,7 @@ using SkillSync.Data.Entities;
 using SkillSync.Data.Repositories;
 using SkillSync.Services; 
 using System.Text;
+using SkillSync.services;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -19,7 +20,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 
 // Add services to the container.
-
+builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddControllers();
 
 builder.Services.AddOpenApi();
@@ -100,14 +101,12 @@ using (var scope = app.Services.CreateScope())
         dbContext.Users.Add(testUser);
         dbContext.SaveChanges();
 
-        var userRole = new SkillSync.Data.Entities.UserRole
+        var userRole = dbContext.Roles.FirstOrDefault(r => r.Name == "User");
+        if (userRole != null)
         {
-            UserId = testUser.Id,
-            RoleId = dbContext.Roles.First(r => r.Name == "User").Id
-        };
-
-        dbContext.UserRoles.Add(userRole);
-        dbContext.SaveChanges();
+            testUser.Roles.Add(userRole);
+            dbContext.SaveChanges();
+        }
 
         Console.WriteLine("Database seeded with test user: test / 123");
     }
