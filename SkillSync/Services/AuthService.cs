@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using SkillSync.Data;
+using SkillSync.Core;
 using SkillSync.Data.Entities;
 using SkillSync.Data.Repositories;
 using SkillSync.Models;
@@ -21,30 +21,32 @@ namespace SkillSync.Services
             _userRepository = userRepository;
         }
 
-        public async Task<AuthorizeResponse?> Login(string userName, string password)
+        public async Task<Result<AuthorizeResponse>> Login(string userName, string password)
         {
+            if (string.IsNullOrWhiteSpace(userName))
+                return Result<AuthorizeResponse>.Failure("Username is required");
+
+            if (string.IsNullOrWhiteSpace(password))
+                return Result<AuthorizeResponse>.Failure("Password is required");
+
             var user = await _userRepository.GetAll()
-       .Include(u => u.Roles)
-       .FirstOrDefaultAsync(u => u.UserName == userName);
+                .Include(u => u.Roles)
+                .FirstOrDefaultAsync(u => u.UserName == userName);
 
             if (user == null)
-                return null;
+                return Result<AuthorizeResponse>.Failure("Invalid username or password");
 
             if (user.PasswordHash != password)
-                return null;
+                return Result<AuthorizeResponse>.Failure("Invalid username or password");
 
             var roles = user.Roles.Select(r => r.Name).ToList();
-
             if (!roles.Any())
-            {
-                throw new InvalidOperationException($"User '{user.UserName}' has no roles assigned");
-            }
+                return Result<AuthorizeResponse>.Failure($"User '{user.UserName}' has no roles assigned");
 
             var jwtKey = _configuration["Jwt:Key"];
             if (string.IsNullOrEmpty(jwtKey))
-            {
-                throw new InvalidOperationException("JWT Key is not configured in appsettings.json");
-            }
+                return Result<AuthorizeResponse>.Failure("JWT configuration error: Key is missing");
+
             var jwtIssuer = _configuration["Jwt:Issuer"] ?? "SkillSync";
             var jwtAudience = _configuration["Jwt:Audience"] ?? "SkillSyncUsers";
 
@@ -60,20 +62,34 @@ namespace SkillSync.Services
                 claims.Add(new Claim(ClaimTypes.Role, role));
             }
 
+            try
+            {
+                var symmetricKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
+                var creds = new SigningCredentials(symmetricKey, SecurityAlgorithms.HmacSha256);
 
-            var symmetricKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
-            var creds = new SigningCredentials(symmetricKey, SecurityAlgorithms.HmacSha256);
+                var token = new JwtSecurityToken(
+                    issuer: jwtIssuer,
+                    audience: jwtAudience,
+                    claims: claims,
+                    signingCredentials: creds
+                );
 
-            var token = new JwtSecurityToken(
-                issuer: jwtIssuer,
-                audience: jwtAudience,
-                claims: claims,
-                signingCredentials: creds
-            );
+                var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
 
-            var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
+                var response = new AuthorizeResponse
+                {
+                    Token = tokenString,
+                    UserId = user.Id,
+                    UserName = user.UserName,
+                    Roles = roles
+                };
 
-            return new AuthorizeResponse { Token = tokenString };
+                return Result<AuthorizeResponse>.Success(response);
+            }
+            catch (Exception ex)
+            {
+                return Result<AuthorizeResponse>.Failure($"Token generation failed: {ex.Message}");
+            }
         }
     }
 }

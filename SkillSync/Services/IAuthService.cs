@@ -1,9 +1,10 @@
-﻿using SkillSync.Models;
+﻿using SkillSync.Core;
+using SkillSync.Models;
 
 namespace SkillSync.Services
 {
     public interface IAuthService
     {
-        Task<AuthorizeResponse?> Login(string userName, string password);
+        Task<Result<AuthorizeResponse>> Login(string userName, string password);
     }
 }
