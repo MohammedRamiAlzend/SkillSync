@@ -17,6 +17,11 @@ namespace SkillSync.Data
         public DbSet<Design> Designs => Set<Design>();
         public DbSet<Attachment> Attachments => Set<Attachment>();
 
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+        }
 
     }
 }
