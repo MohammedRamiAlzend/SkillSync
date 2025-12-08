@@ -5,13 +5,12 @@ namespace SkillSync.Services
 {
     public interface IDesignService
     {
-        // نستخدم DTO عند الإنشاء
+        // 🚨 التعديل هنا: الدالة تستقبل DTO مع IFormFile
         Task<Design> CreateDesignAsync(CreateDesignDto designDto);
 
+        // ... الدوال الأخرى تبقى كما هي ...
         Task<IEnumerable<Design>> GetAllDesignsAsync();
         Task<Design?> GetDesignByIdAsync(int id);
-
-        // عند التحديث، نمرر الكيان المحدّث (يفضل استخدام DTO خاص بالتحديث أيضاً)
         Task<bool> UpdateDesignAsync(int id, Design updatedDesign);
         Task<bool> DeleteDesignAsync(int id);
     }
