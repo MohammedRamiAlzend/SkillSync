@@ -20,10 +20,18 @@ namespace SkillSync.Controllers
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
             var result = await _authService.Login(request.UserName, request.Password);
-            if (result == null)
-                return Unauthorized(new { message = "Invalid credentials" });
+            if (result.IsFailure)
+                return BadRequest(new
+                {
+                    success = false,
+                    errors = result.Errors
+                });
 
-            return Ok(result);
+            return Ok(new
+            {
+                success = true,
+                data = result.Value
+            });
         }
 
         [HttpGet("protected")]
