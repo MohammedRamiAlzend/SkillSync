@@ -1,8 +1,10 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using SkillSync.Core;
 using SkillSync.Data;
 using SkillSync.Data.Entities;
-using Microsoft.AspNetCore.Http;
+using SkillSync.Dtos;
+using System.IO.Compression;
 using System.Linq;
 
 namespace SkillSync.Services
@@ -12,15 +14,18 @@ namespace SkillSync.Services
         private readonly AppDbContext _context;
         private readonly IFileStorageService _fileStorage;
         private readonly ILogger<AttachmentService> _logger;
+        private readonly IWebHostEnvironment _environment;
 
         public AttachmentService(
             AppDbContext context,
             IFileStorageService fileStorage,
-            ILogger<AttachmentService> logger)
+            ILogger<AttachmentService> logger,
+            IWebHostEnvironment environment)
         {
             _context = context;
             _fileStorage = fileStorage;
             _logger = logger;
+            _environment = environment;
         }
 
         public async Task<Result<List<Attachment>>> CreateAsync(
@@ -244,6 +249,97 @@ namespace SkillSync.Services
                 {
                     await _fileStorage.DeleteAsync(attachment.RelativePath);
                 }
+            }
+        }
+
+
+        public async Task<Result<List<AttachmentDto>>> GetDesignAttachmentsAsync(
+    int designId,
+    CancellationToken ct)
+        {
+            try
+            {
+                var attachments = await _context.Attachments
+                    .Where(a => a.DesignId == designId && a.IsActive)
+                    .Select(a => new AttachmentDto
+                    {
+                        Id = a.Id,
+                        FileName = a.FileName,
+                        MimeType = a.MimeType,
+                        FileSizeBytes = a.FileSizeBytes,
+                        IsPrimary = a.IsPrimary,
+                        CreatedAt = a.CreatedAt
+                    })
+                    .ToListAsync(ct);
+
+                return Result<List<AttachmentDto>>.Success(attachments);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting design attachments for design {DesignId}", designId);
+                return Result<List<AttachmentDto>>.Failure($"An error occurred: {ex.Message}");
+            }
+        }
+
+        public async Task<Result<ZipFileDto>> DownloadAllAttachmentsAsync(
+            int designId,
+            CancellationToken ct)
+        {
+            try
+            {
+                _logger.LogInformation("Creating ZIP for design {DesignId}", designId);
+
+                // 1. جلب المرفقات
+                var attachments = await _context.Attachments
+                    .Where(a => a.DesignId == designId && a.IsActive)
+                    .ToListAsync(ct);
+
+                if (!attachments.Any())
+                    return Result<ZipFileDto>.Failure("No attachments found for this design");
+
+                // 2. إنشاء ZIP
+                var memoryStream = new MemoryStream();
+                using (var archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, leaveOpen: true))
+                {
+                    foreach (var attachment in attachments)
+                    {
+                        if (string.IsNullOrEmpty(attachment.RelativePath))
+                            continue;
+
+                        var filePath = Path.Combine(_environment.WebRootPath, attachment.RelativePath);
+                        if (!System.IO.File.Exists(filePath))
+                        {
+                            _logger.LogWarning("File not found: {Path}", filePath);
+                            continue;
+                        }
+
+                        try
+                        {
+                            var entry = archive.CreateEntry(attachment.FileName, CompressionLevel.Fastest);
+                            using var entryStream = entry.Open();
+                            using var fileStream = System.IO.File.OpenRead(filePath);
+                            await fileStream.CopyToAsync(entryStream);
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogWarning(ex, "Failed to add file to ZIP: {FileName}", attachment.FileName);
+                        }
+                    }
+                }
+
+                memoryStream.Seek(0, SeekOrigin.Begin);
+
+                // 3. إرجاع الـ DTO
+                return Result<ZipFileDto>.Success(new ZipFileDto
+                {
+                    Content = memoryStream,
+                    FileName = $"design_{designId}_attachments.zip"
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating ZIP for design {DesignId}", designId);
+                return Result<ZipFileDto>.Failure($"Error creating ZIP file: {ex.Message}");
             }
         }
     }

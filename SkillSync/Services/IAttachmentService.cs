@@ -1,5 +1,6 @@
 ﻿using SkillSync.Core;
 using SkillSync.Data.Entities;
+using SkillSync.Dtos;
 
 namespace SkillSync.Services
 {
@@ -17,5 +18,13 @@ namespace SkillSync.Services
         Task<Result<Attachment>> GetAsync(
             int attachmentId,
             CancellationToken ct);
+
+        Task<Result<List<AttachmentDto>>> GetDesignAttachmentsAsync(
+                int designId,
+                CancellationToken ct);
+
+        Task<Result<ZipFileDto>> DownloadAllAttachmentsAsync(
+            int designId,
+            CancellationToken ct);
     }
-}
+    }
