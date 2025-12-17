@@ -5,10 +5,9 @@ using Scalar.AspNetCore;
 using SkillSync.Data;
 using SkillSync.Data.Entities;
 using SkillSync.Data.Repositories;
-using SkillSync.Services; 
-using System.Text;
 using SkillSync.services;
-
+using SkillSync.Services;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,15 +18,16 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 // Generic Repository
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 
-// Add services to the container.
+// Add services to the container
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IAttachmentService, AttachmentService>(); 
+builder.Services.AddScoped<IFileStorageService, FileStorageService>();
+builder.Services.AddScoped<IGenericRepository<User>, GenericRepository<User>>();
 builder.Services.AddControllers();
-
 builder.Services.AddOpenApi();
 
-builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddScoped<IGenericRepository<User>, GenericRepository<User>>();
-
+// Authentication
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -47,7 +47,7 @@ builder.Services.AddAuthentication(options =>
         ValidAudience = builder.Configuration["Jwt:Audience"] ?? "SkillSyncUsers",
         IssuerSigningKey = new SymmetricSecurityKey(
             Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"] ?? "mySuperSecretKey123456789")),
-        ClockSkew = TimeSpan.Zero 
+        ClockSkew = TimeSpan.Zero
     };
 
     options.Events = new JwtBearerEvents
@@ -65,11 +65,15 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-
 builder.Services.AddAuthorization();
+
+EnsureStorageDirectories(builder);
 
 var app = builder.Build();
 
+app.UseStaticFiles();
+
+// Seed database
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -81,20 +85,20 @@ using (var scope = app.Services.CreateScope())
     if (!dbContext.Roles.Any())
     {
         dbContext.Roles.AddRange(
-            new SkillSync.Data.Entities.Role { Name = "Admin" },
-            new SkillSync.Data.Entities.Role { Name = "User" },
-            new SkillSync.Data.Entities.Role { Name = "Designer" }
+            new Role { Name = "Admin" },
+            new Role { Name = "User" },
+            new Role { Name = "Designer" }
         );
         dbContext.SaveChanges();
     }
 
     if (!dbContext.Users.Any())
     {
-        var testUser = new SkillSync.Data.Entities.User
+        var testUser = new User
         {
             UserName = "test",
             Email = "test@example.com",
-            PasswordHash = "123", 
+            PasswordHash = "123",
             IsActive = true
         };
 
@@ -110,6 +114,22 @@ using (var scope = app.Services.CreateScope())
 
         Console.WriteLine("Database seeded with test user: test / 123");
     }
+
+    if (!dbContext.Designs.Any())
+    {
+        var design = new Design
+        {
+            UserId = 1,
+            Title = "Test Design",
+            Description = "For testing attachments",
+            Status = "Pending",
+            CreatedAt = DateTime.UtcNow
+        };
+
+        dbContext.Designs.Add(design);
+        dbContext.SaveChanges();
+        Console.WriteLine("Created test design with ID: 1");
+    }
 }
 
 if (app.Environment.IsDevelopment())
@@ -119,10 +139,32 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
 app.UseAuthentication();
 app.UseAuthorization();
-
 app.MapControllers();
 
 app.Run();
+
+static void EnsureStorageDirectories(WebApplicationBuilder builder)
+{
+    try
+    {
+        var wwwrootPath = Path.Combine(builder.Environment.ContentRootPath, "wwwroot");
+        if (!Directory.Exists(wwwrootPath))
+        {
+            Directory.CreateDirectory(wwwrootPath);
+            Console.WriteLine($"Created wwwroot directory at: {wwwrootPath}");
+        }
+
+        var uploadsPath = Path.Combine(wwwrootPath, "Uploads");
+        if (!Directory.Exists(uploadsPath))
+        {
+            Directory.CreateDirectory(uploadsPath);
+            Console.WriteLine($"Created Uploads directory at: {uploadsPath}");
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Error creating storage directories: {ex.Message}");
+    }
+}
