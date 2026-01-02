@@ -17,10 +17,20 @@ namespace SkillSync.Data
         public DbSet<Design> Designs => Set<Design>();
         public DbSet<Attachment> Attachments => Set<Attachment>();
 
+        //protected override void OnModelCreating(ModelBuilder modelBuilder)
+        //{
+        //    base.OnModelCreating(modelBuilder);
+
+        //}
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
+            modelBuilder.Entity<User>()
+                .HasMany(u => u.Roles)
+                .WithMany(r => r.Users)
+                .UsingEntity(j => j.ToTable("RoleUser"));
         }
 
     }

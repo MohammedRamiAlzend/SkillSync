@@ -41,6 +41,19 @@ namespace SkillSync.Controllers
             var user = User.Identity?.Name ?? "unknown";
             return Ok(new { message = $"Hello {user}, you are authenticated." });
         }
+
+
+
+        [HttpPost("register")]
+        [AllowAnonymous]
+        public async Task<IActionResult> Register([FromBody] RegisterRequest request)
+        {
+            var result = await _authService.Register(request.UserName, request.Email, request.Password);
+            if (result.IsFailure)
+                return BadRequest(new { success = false, errors = result.Errors });
+
+            return Ok(new { success = true, data = result.Value });
+        }
     }
 }
 
